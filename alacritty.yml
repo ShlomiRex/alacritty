@@ -744,3 +744,11 @@
 
   # Print all received window events.
   #print_events: false
+
+font:
+  size: 16
+
+shell:
+  program: /bin/zsh
+  args:
+    - --login

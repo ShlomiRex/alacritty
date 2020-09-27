@@ -357,8 +357,6 @@ impl Display {
         let (cell_width, cell_height) = compute_cell_size(config, &self.glyph_cache.font_metrics());
         size_info.cell_width = cell_width;
         size_info.cell_height = cell_height;
-
-        info!("Cell Size: {} x {}", cell_width, cell_height);
     }
 
     /// Clear glyph cache.
@@ -435,9 +433,6 @@ impl Display {
         let physical = PhysicalSize::new(self.size_info.width as u32, self.size_info.height as u32);
         self.window.resize(physical);
         self.renderer.resize(&self.size_info);
-
-        info!("Padding: {} x {}", self.size_info.padding_x, self.size_info.padding_y);
-        info!("Width: {}, Height: {}", self.size_info.width, self.size_info.height);
     }
 
     /// Draw the screen.
@@ -598,7 +593,7 @@ impl Display {
                 self.draw_search(config, &size_info, message_bar_lines, &search_text);
 
                 // Compute IME position.
-                Point::new(size_info.lines() - 1, Column(search_text.chars().count() - 1))
+                Point::new(size_info.lines() - 1, Column(search_text.len() - 1))
             },
             None => cursor_point,
         };
@@ -640,11 +635,10 @@ impl Display {
 
         // Truncate beginning of the search regex if it exceeds the viewport width.
         let num_cols = size_info.cols().0;
-        let label_len = search_label.chars().count();
-        let regex_len = formatted_regex.chars().count();
+        let label_len = search_label.len();
+        let regex_len = formatted_regex.len();
         let truncate_len = min((regex_len + label_len).saturating_sub(num_cols), regex_len);
-        let index = formatted_regex.char_indices().nth(truncate_len).map(|(i, _c)| i).unwrap_or(0);
-        let truncated_regex = &formatted_regex[index..];
+        let truncated_regex = &formatted_regex[truncate_len..];
 
         // Add search label to the beginning of the search regex.
         let mut bar_text = format!("{}{}", search_label, truncated_regex);

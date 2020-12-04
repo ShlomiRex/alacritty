@@ -211,7 +211,7 @@ fn load_imports(config: &Value, config_paths: &mut Vec<PathBuf>, recursion_limit
     let mut merged = Value::Null;
 
     for import in imports {
-        let path = match import {
+        let mut path = match import {
             Value::String(path) => PathBuf::from(path),
             _ => {
                 error!(
@@ -221,6 +221,17 @@ fn load_imports(config: &Value, config_paths: &mut Vec<PathBuf>, recursion_limit
                 continue;
             },
         };
+
+        // Resolve paths relative to user's home directory.
+        if let (Ok(stripped), Some(home_dir)) = (path.strip_prefix("~/"), dirs::home_dir()) {
+            path = home_dir.join(stripped);
+        }
+
+        if !path.exists() {
+            info!(target: LOG_TARGET_CONFIG, "Skipping importing config; not found:");
+            info!(target: LOG_TARGET_CONFIG, "  {:?}", path.display());
+            continue;
+        }
 
         match parse_config(&path, config_paths, recursion_limit - 1) {
             Ok(config) => merged = serde_utils::merge(merged, config),
